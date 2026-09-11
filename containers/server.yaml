@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: epoch-server
+  namespace: epoch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: epoch-server
+  template:
+    metadata:
+      labels:
+        app: epoch-server
+    spec:
+      containers:
+      - name: epoch-server
+        image: ghcr.io/karlroigus/epoch-server:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: PORT
+          value: "3000"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PASSWORD
+        - name: DATABASE_URL
+          value: "postgres://epoch:$(POSTGRES_PASSWORD)@postgres:5432/epoch"
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: server-secret
+              key: API_KEY
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: epoch-server
+  namespace: epoch
+spec:
+  selector:
+    app: epoch-server
+  ports:
+  - port: 80
+    targetPort: 3000

@@ -38,11 +38,11 @@ Single table to start:
 ```sql
 CREATE TABLE entries (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    description TEXT NOT NULL,
-    started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    stopped_at TIMESTAMPTZ,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    description TEXT,
+    started_at TIMESTAMP NOT NULL DEFAULT now(),
+    stopped_at TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP NOT NULL DEFAULT now()
 );
 ```
 
@@ -52,8 +52,8 @@ A running timer = a row where `stopped_at IS NULL`. Only one can exist at a time
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/api/timer/start` | Start a new timer `{ "description": "..." }` |
-| POST | `/api/timer/stop` | Stop the running timer |
+| POST | `/api/timer/start` | Start a new timer (no body needed) |
+| POST | `/api/timer/stop` | Stop the running timer `{ "description": "..." }` |
 | GET | `/api/timer/status` | Get the currently running timer (if any) |
 | GET | `/api/entries` | List entries (default: today) |
 | DELETE | `/api/entries/:id` | Delete an entry |
@@ -64,12 +64,12 @@ Auth: static API key passed as `Authorization: Bearer <key>` header. Key configu
 ## CLI Commands
 
 ```
-epoch start "writing docs"    → POST /api/timer/start
-epoch stop                    → POST /api/timer/stop
-epoch status                  → GET  /api/timer/status
-epoch log                     → GET  /api/entries (today)
-epoch delete <id>             → DELETE /api/entries/:id
-epoch edit <id> --desc "..."  → PUT /api/entries/:id
+epoch start                          → POST /api/timer/start
+epoch stop "reviewed PR #42"         → POST /api/timer/stop
+epoch status                         → GET  /api/timer/status
+epoch log                            → GET  /api/entries (today)
+epoch delete <id>                    → DELETE /api/entries/:id
+epoch edit <id> --desc "new text"    → PUT /api/entries/:id
 ```
 
 No CLI framework (no clap) — manual arg parsing from `std::env::args()`.
@@ -135,9 +135,9 @@ api_key = "your-secret-key"
 2. Run migrations
 3. Start server: `cargo run -p epoch-server`
 4. Test the flow:
-   - `epoch start "testing the MVP"` → returns entry with running status
+   - `epoch start` → starts a timer, confirms it's running
    - `epoch status` → shows running timer with elapsed time
-   - `epoch stop` → stops timer, shows duration
-   - `epoch log` → shows today's entries
-   - `epoch start "another task"` while one is running → error
+   - `epoch stop "testing the MVP"` → stops timer, attaches description, shows duration
+   - `epoch log` → shows today's entries with descriptions and durations
+   - `epoch start` while one is running → error
    - `epoch delete <id>` → removes entry
