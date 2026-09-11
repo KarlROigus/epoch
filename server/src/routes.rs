@@ -1,9 +1,11 @@
+use axum::extract::connect_info::ConnectInfo;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::Json;
 use epoch_common::{EntryResponse, ErrorResponse, StatusResponse, StopRequest, UpdateEntryRequest};
 use sqlx::PgPool;
+use std::net::SocketAddr;
 use uuid::Uuid;
 
 use crate::db;
@@ -17,7 +19,11 @@ fn entry_to_response(e: db::Entry) -> EntryResponse {
     }
 }
 
-pub async fn start_timer(State(pool): State<PgPool>) -> impl IntoResponse {
+pub async fn start_timer(
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    State(pool): State<PgPool>,
+) -> impl IntoResponse {
+    println!("[{}] Timer started (from {})", chrono::Utc::now().format("%Y-%m-%d %H:%M:%S"), addr);
     if let Ok(Some(_)) = db::get_running(&pool).await {
         return (
             StatusCode::CONFLICT,
@@ -42,9 +48,11 @@ pub async fn start_timer(State(pool): State<PgPool>) -> impl IntoResponse {
 }
 
 pub async fn stop_timer(
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
     State(pool): State<PgPool>,
     Json(body): Json<StopRequest>,
 ) -> impl IntoResponse {
+    println!("[{}] Timer stopped: \"{}\" (from {})", chrono::Utc::now().format("%Y-%m-%d %H:%M:%S"), body.description, addr);
     match db::stop_entry(&pool, &body.description).await {
         Ok(Some(entry)) => (
             StatusCode::OK,
