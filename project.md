@@ -101,6 +101,7 @@ Things currently handled by external dependencies that would be valuable to impl
 | **Metrics collection** | Prometheus (not yet installed) | Build a custom metrics collector that scrapes /metrics endpoints |
 | **Log aggregation** | Not yet set up | Build a log shipper that tails container logs and stores them centrally |
 | **CI/CD runner** | GitHub Actions (not yet set up) | Build a webhook listener that runs tests and deploys on git push |
+| **Database backup service** | Manual pg_dump / cron | Build a Rust service that runs scheduled pg_dumps, compresses, uploads to S3, and enforces retention policy |
 
 ## Non-Goals
 - Billing / invoicing
